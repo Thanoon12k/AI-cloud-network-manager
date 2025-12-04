@@ -1,0 +1,4 @@
+Datacenter,Total_Hosts,Total_PEs,Total_VMs,Total_RAM_MB,Total_BW_Mbps,Total_Storage_MB
+Datacenter_0,2,3,0,16384,10000,204800
+Datacenter_1,2,3,0,16384,10000,204800
+Datacenter_2,2,3,0,16384,10000,204800

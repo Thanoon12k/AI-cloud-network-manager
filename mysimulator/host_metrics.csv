@@ -1,0 +1,7 @@
+Host_ID,Datacenter,PEs,RAM_MB,BW_Mbps,Storage_MB,VMs_Allocated,Total_MIPS_Capacity
+0,Datacenter_0,2,8192,5000,102400,0,2000
+1,Datacenter_0,1,8192,5000,102400,0,1000
+0,Datacenter_1,2,8192,5000,102400,0,2000
+1,Datacenter_1,1,8192,5000,102400,0,1000
+0,Datacenter_2,2,8192,5000,102400,0,2000
+1,Datacenter_2,1,8192,5000,102400,0,1000
