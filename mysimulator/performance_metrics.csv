@@ -1,11 +1,11 @@
 Metric,Value
-Total_Cloudlets,34
-Successful_Cloudlets,34
+Total_Cloudlets,100
+Successful_Cloudlets,100
 Failed_Cloudlets,0
 Success_Rate_Percent,100
-Avg_Execution_Time_Sec,941.17
+Avg_Execution_Time_Sec,2679.95
 Avg_Waiting_Time_Sec,0
-Min_Execution_Time_Sec,800
-Max_Execution_Time_Sec,1199.99
-Total_Execution_Time_Sec,31999.88
+Min_Execution_Time_Sec,2399.96
+Max_Execution_Time_Sec,2799.94
+Total_Execution_Time_Sec,267994.6
 Total_VMs_Used,15

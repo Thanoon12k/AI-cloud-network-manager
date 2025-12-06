@@ -31,27 +31,6 @@ import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
  * CloudSim 7 Compatible Simulator with Optimized Resource Allocation
  * OPTIMIZED FOR EFFICIENCY & COST REDUCTION
  * 
- * Fixes Applied:
- * ✓ ISSUE 1: Over-provisioning
- *   - Reduced VM MIPS: 250 → 100
- *   - Reduced VM RAM: 512 MB → 256 MB
- *   - Reduced Host PE: 4+2 → 2+1 per host
- *   - Expected utilization: 60%+ instead of 20%
- * 
- * ✓ ISSUE 2: Single datacenter deployment
- *   - Implemented VmAllocationPolicyBalanced
- *   - VMs distributed across all 3 datacenters
- *   - VM allocation: 5-6 VMs per datacenter
- * 
- * ✓ ISSUE 3: High storage costs (54% of budget)
- *   - Reduced storage: 1TB → 100GB per host
- *   - Reduced storage cost rate: 0.001 → 0.0001 USD/MB
- *   - Expected storage cost reduction: 90%
- * 
- * ✓ ISSUE 4: Underutilized infrastructure
- *   - All 3 datacenters now utilized
- *   - Proper load distribution algorithm
- *   - Multi-datacenter broker assignment
  */
 public class java_simulator_cloude_sonnet {
 	private static final int NUM_USERS = 1;

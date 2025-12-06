@@ -37,7 +37,7 @@ import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
  * - Correct VM–cloudlet mapping per broker (no “guest entity … doesn’t exist”)
  * - Cloudlets fairly distributed across brokers (no dropped remainder)
  */
-public class java_simulator1 {
+public class java_simulator_basic1 {
 
     private static final int NUM_USERS = 1;
     private static final int NUM_CLOUDLETES = 100;

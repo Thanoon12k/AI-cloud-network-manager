@@ -1,0 +1,39 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                    Performance Analysis Report                     ║
+╚════════════════════════════════════════════════════════════════════╝
+
+CLOUDLET EXECUTION SUMMARY
+----------------------------------------------------------------------
+Total Cloudlets:                  100
+Successfully Executed:            100
+Failed:                           0
+Success Rate:                     100.00%
+
+EXECUTION TIME STATISTICS (seconds)
+----------------------------------------------------------------------
+Mean:                             2679.9460
+Median:                           2799.9400
+Std Dev:                          184.2173
+Min:                              2399.9600
+Max:                              2799.9400
+25th Percentile:                  2399.9600
+75th Percentile:                  2799.9400
+
+WAITING TIME STATISTICS (seconds)
+----------------------------------------------------------------------
+Mean:                             0.0000
+Median:                           0.0000
+Std Dev:                          0.0000
+Min:                              0.0000
+Max:                              0.0000
+
+DISTRIBUTION BY DATACENTER
+----------------------------------------------------------------------
+Datacenter 2:                  100 cloudlets (100.0%)
+
+DISTRIBUTION BY VM
+----------------------------------------------------------------------
+Total VMs Used:                   15
+Average Cloudlets per VM:        6.67
+Min Cloudlets per VM:            6
+Max Cloudlets per VM:            7

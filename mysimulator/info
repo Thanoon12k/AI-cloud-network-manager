@@ -1,0 +1,6 @@
+using space shared better to process task after task in example 9
+
+Time-Shared (VM 0)
+All three cloudlets start simultaneously and share the 1000 MIPS CPU proportionally:
+Space-Shared (VM 1)
+Cloudlets execute one after another:

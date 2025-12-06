@@ -1,0 +1,57 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                  Resource Utilization Report                       ║
+╚════════════════════════════════════════════════════════════════════╝
+
+VM DEPLOYMENT SUMMARY
+----------------------------------------------------------------------
+Total VMs:                        15
+Active VMs:                       15
+Migrating VMs:                    0
+
+VM RESOURCE SPECIFICATIONS
+----------------------------------------------------------------------
+Average MIPS:                     100
+Average RAM:                      256 MB
+Average Bandwidth:                500 Mbps
+Total Compute Capacity:           1500 MIPS
+Total Memory Capacity:            3840 MB
+
+HOST ALLOCATION
+----------------------------------------------------------------------
+
+HOST CAPACITY SUMMARY
+----------------------------------------------------------------------
+Total Hosts:                      6
+Total PEs Available:              9
+Total RAM Available:              49152 MB
+Total Storage Available:          614400 MB
+Total Bandwidth Available:        30000 Mbps
+
+UTILIZATION RATES
+----------------------------------------------------------------------
+RAM Utilization:                  7.8%
+Host Allocation Rate:             0.0%
+
+DATACENTER STATISTICS
+----------------------------------------------------------------------
+
+Datacenter_0:
+  Hosts:                 2
+  PEs:                   3
+  VMs Allocated:         0
+  Memory:                16384 MB
+  Storage:               204800 MB
+
+Datacenter_1:
+  Hosts:                 2
+  PEs:                   3
+  VMs Allocated:         0
+  Memory:                16384 MB
+  Storage:               204800 MB
+
+Datacenter_2:
+  Hosts:                 2
+  PEs:                   3
+  VMs Allocated:         0
+  Memory:                16384 MB
+  Storage:               204800 MB
