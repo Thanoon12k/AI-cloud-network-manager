@@ -24,6 +24,9 @@ import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.VmSchedulerTimeShared;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.power.PowerDatacenter;
+import org.cloudbus.cloudsim.power.PowerHost;
+import org.cloudbus.cloudsim.power.models.PowerModelLinear;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
@@ -38,7 +41,10 @@ public class mysim1 {
 		@SuppressWarnings("unused")
 		private static  int NUM_DCS=3;
 		private static  int NUM_VMS=15;
-		private static  int NUM_CLOUDLETS=40;
+		private static  int NUM_CLOUDLETS=10;
+//		private static  int NUM_CLOUDLETS=10;
+//		private static  int NUM_CLOUDLETS=10;
+//		
 	
 	public static void main(String[] args) {
 		Log.println("Starting CloudSimExample6...");
@@ -60,9 +66,12 @@ public class mysim1 {
 			long host_storage = 50000; // host storage (MB)
 			int host_bw = 10000; // host bandwidth (MBps)
 			//Second step: Create Datacenters
-			Datacenter datacenter3= createDatacenter("Datacenter_3",5,host_mips,host_ram,host_storage,host_bw);
-			Datacenter datacenter2= createDatacenter("Datacenter_2",5,host_mips,host_ram,host_storage,host_bw);
-			Datacenter datacenter1= createDatacenter("Datacenter_1",5,host_mips,host_ram,host_storage,host_bw);
+			PowerDatacenter datacenter3= createPowerDatacenter("power_Datacenter_3",5,host_mips,host_ram,host_storage,host_bw);
+			PowerDatacenter datacenter2= createPowerDatacenter("power_Datacenter_2",5,host_mips,host_ram,host_storage,host_bw);
+			PowerDatacenter datacenter1= createPowerDatacenter("power_Datacenter_1",5,host_mips,host_ram,host_storage,host_bw);
+//			Datacenter datacenter3= createDatacenter("Datacenter_3",5,host_mips,host_ram,host_storage,host_bw);
+//			Datacenter datacenter2= createDatacenter("Datacenter_2",5,host_mips,host_ram,host_storage,host_bw);
+//			Datacenter datacenter1= createDatacenter("Datacenter_1",5,host_mips,host_ram,host_storage,host_bw);
 			//Datacenters are the resource providers in CloudSim. We need at least one of them to run a CloudSim simulation
 			//Third step: Create Broker
 			
@@ -92,6 +101,9 @@ public class mysim1 {
 			CloudSim.stopSimulation();
 
 			printCloudletList(newList);
+//			System.out.println("Energy consumed by " + datacenter1.getName() + ": " + datacenter1.getPower() + " kWh");
+//			System.out.println("Energy consumed by " + datacenter2.getName() + ": " + datacenter2.getPower() + " kWh");
+//			System.out.println("Energy consumed by " + datacenter3.getName() + ": " + datacenter3.getPower() + " kWh");
 
 			Log.println("CloudSimExample6 finished!");
 		}
@@ -142,13 +154,13 @@ public class mysim1 {
 		 * @return List<Cloudlet>
 		 */
 	private static List<Cloudlet> createCloudlets(int userId, int num_cloudlets, int min_length, int max_length) {
-    List<Cloudlet> list = new ArrayList<>();
-    Random random = new Random(42);
+		List<Cloudlet> list = new ArrayList<>();
+		Random random = new Random(42);
 
-    long fileSize = 300;
-    long outputSize = 300;
+		long fileSize = 300;
+		long outputSize = 300;
 
-    for (int i = 0; i < num_cloudlets; i++) {
+    	for (int i = 0; i < num_cloudlets; i++) {
         // Generate random length between min_length and max_length (inclusive)
         long length = min_length + random.nextInt(max_length - min_length + 1);
 
@@ -162,12 +174,12 @@ public class mysim1 {
             new UtilizationModelFull(), 
             new UtilizationModelFull(), 
             new UtilizationModelFull()
-        );
-        cloudlet.setUserId(userId);
-        list.add(cloudlet);
-    }
+				);
+				cloudlet.setUserId(userId);
+				list.add(cloudlet);
+			}
 
-    return list;
+			return list;
 }
 
 
@@ -222,6 +234,68 @@ private static Datacenter createDatacenter(String name,int num_PEs, int host_mip
 	return datacenter;
 }
 
+/**
+ * Creates a power Datacenter with the given specifications
+ * 
+ * @param String name
+ * @param int    num_DCs
+ * @param int    host_mips
+ * @param int    host_ram
+ * @param long   host_storage
+ * @param int    host_bw
+ * @return PowerDatacenter
+ */
+
+private static PowerDatacenter createPowerDatacenter(String name, int num_PEs, 
+    int host_mips, int host_ram, long host_storage, int host_bw) {
+    
+    List<PowerHost> hostList = new ArrayList<>();
+    
+    for (int hostId = 0; hostId < 1; hostId++) {
+        List<Pe> peList = new ArrayList<>();
+        for (int i = 0; i < num_PEs; i++) {
+            peList.add(new Pe(i, new PeProvisionerSimple(host_mips)));
+        }
+        
+        PowerHost host = new PowerHost(hostId,
+            new RamProvisionerSimple(host_ram),
+            new BwProvisionerSimple(host_bw),
+            host_storage,
+            peList,
+            new VmSchedulerTimeShared(peList), 
+            new PowerModelLinear(200, 400)
+        );
+        
+        hostList.add(host);
+    }
+    
+    String arch = "x86";
+    String os = "Linux";
+    String vmm = "Xen";
+    double time_zone = 10.0;
+    double costPerCpu = 3.0;
+    double costPerMem = 0.05;
+    double costPerStorage = 0.1;
+    double costPerBw = 0.1;
+    LinkedList<Storage> storageList = new LinkedList<>();
+    
+    DatacenterCharacteristics characteristics = new DatacenterCharacteristics(
+        arch, os, vmm, hostList, time_zone,
+        costPerCpu, costPerMem, costPerStorage, costPerBw);
+    
+    PowerDatacenter datacenter = null;
+    try {
+        datacenter = new PowerDatacenter(name, characteristics, 
+            new VmAllocationPolicySimple(hostList), storageList, 
+            1); // Changed from 0 to 300 (scheduling interval in seconds)
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    
+    return datacenter;
+}
+
+
 	/**
 	 * Prints the Cloudlet objects
 	 * @param list  list of Cloudlets
@@ -249,5 +323,6 @@ private static Datacenter createDatacenter(String name,int num_PEs, int host_mip
             }
         }
 
+        
 	}
 }
