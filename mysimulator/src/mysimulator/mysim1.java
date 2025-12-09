@@ -62,11 +62,12 @@ public class mysim1 {
 			int brokerId = broker.getId();
 			// Datacenter specifications
 			int host_mips=1000;  //* num_pes;
+			int host_pes=5;
 			int host_ram = 4096; // host memory (MB)
 			long host_storage = 50000; // host storage (MB)
 			int host_bw = 10000; // host bandwidth (MBps)
 			//Second step: Create Datacenters
-			PowerDatacenter datacenter3= createPowerDatacenter("power_Datacenter_3",5,host_mips,host_ram,host_storage,host_bw);
+			PowerDatacenter datacenter3= createPowerDatacenter("power_Datacenter_3",host_pes,host_mips,host_ram,host_storage,host_bw);
 			PowerDatacenter datacenter2= createPowerDatacenter("power_Datacenter_2",5,host_mips,host_ram,host_storage,host_bw);
 			PowerDatacenter datacenter1= createPowerDatacenter("power_Datacenter_1",5,host_mips,host_ram,host_storage,host_bw);
 //			Datacenter datacenter3= createDatacenter("Datacenter_3",5,host_mips,host_ram,host_storage,host_bw);

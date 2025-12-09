@@ -1,0 +1,5 @@
+notes go here
+
+the command used to fix maven is
+from maven run as maven build the in goal do this command(the steps in pdf):
+>>> dependency:purge-local-repository clean install
