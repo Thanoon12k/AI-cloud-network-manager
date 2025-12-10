@@ -55,6 +55,14 @@ public class simu_advanced {
     private static final long CLOUDLET_OUTPUT_SIZE = 300;
     private static final int CLOUDLET_PES = 1;
 
+    
+ // Cost parameters (example values)
+    private static final double COST_PER_SEC      = 3.0;   // CPU cost per second
+    private static final double COST_PER_MEM      = 0.05;  // Cost per MB of RAM
+    private static final double COST_PER_STORAGE  = 0.001; // Cost per MB of storage
+    private static final double COST_PER_BW       = 0.001; // Cost per MB of bandwidth
+
+    
     private final CloudSimPlus simulation;
     private final DatacenterBroker broker;
     private List<Vm> vmList;
@@ -251,6 +259,53 @@ public class simu_advanced {
         System.out.println("  Hosts per Datacenter: " + HOSTS_PER_DATACENTER);
         System.out.println("  PE Cores per Host: " + PES_PER_HOST);
         System.out.println("  Total PE Cores: " + (DATACENTERS * HOSTS_PER_DATACENTER * PES_PER_HOST));
+        // ================== COST STATISTICS ==================
+        System.out.println("\nCost Statistics:");
+
+        // 1) CPU cost: sum of execution time (sec) * COST_PER_SEC
+        double totalCpuSeconds = finishedCloudlets.stream()
+            .mapToDouble(c -> (c.getFinishTime() - c.getStartTime()))
+            .sum();
+        double cpuCost = totalCpuSeconds * COST_PER_SEC;
+
+        // 2) RAM cost: total VM RAM (MB) * COST_PER_MEM
+        long totalVmRamMb = broker.getVmCreatedList().stream()
+            .mapToLong(vm -> vm.getRam().getCapacity())
+            .sum();
+        double ramCost = totalVmRamMb * COST_PER_MEM;
+
+        // 3) Storage cost: total VM storage (MB) * COST_PER_STORAGE
+        long totalVmStorageMb = broker.getVmCreatedList().stream()
+            .mapToLong(vm -> vm.getStorage().getCapacity())
+            .sum();
+        double storageCost = totalVmStorageMb * COST_PER_STORAGE;
+
+        // 4) Bandwidth cost: use cloudlet input + output sizes (MB) * COST_PER_BW
+        long totalCloudletDataMb = finishedCloudlets.stream()
+            .mapToLong(c -> c.getFileSize() + c.getOutputSize())
+            .sum();
+        double bwCost = totalCloudletDataMb * COST_PER_BW;
+
+        double totalCost = cpuCost + ramCost + storageCost + bwCost;
+
+        System.out.println("  Total CPU Time (sec): " + String.format("%.2f", totalCpuSeconds));
+        System.out.println("  CPU Cost: $" + String.format("%.4f", cpuCost));
+
+        System.out.println("  Total VM RAM (MB): " + totalVmRamMb);
+        System.out.println("  RAM Cost: $" + String.format("%.4f", ramCost));
+
+        System.out.println("  Total VM Storage (MB): " + totalVmStorageMb);
+        System.out.println("  Storage Cost: $" + String.format("%.4f", storageCost));
+
+        System.out.println("  Total Cloudlet Data (MB): " + totalCloudletDataMb);
+        System.out.println("  Bandwidth Cost: $" + String.format("%.4f", bwCost));
+
+        System.out.println("  ------------------------------------");
+        System.out.println("  TOTAL COST: $" + String.format("%.4f", totalCost));
+        if (finishedCount > 0) {
+            System.out.println("  Cost per Cloudlet: $" + 
+                String.format("%.6f", totalCost / finishedCount));
+        }
 
         System.out.println("\n" + "=".repeat(80));
     }
