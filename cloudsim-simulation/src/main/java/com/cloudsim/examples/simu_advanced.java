@@ -16,7 +16,11 @@ import org.cloudsimplus.schedulers.cloudlet.CloudletSchedulerSpaceShared;
 import org.cloudsimplus.utilizationmodels.UtilizationModelDynamic;
 import org.cloudsimplus.utilizationmodels.UtilizationModelFull;
 import org.cloudsimplus.vms.Vm;
+import org.cloudsimplus.vms.VmCost;
 import org.cloudsimplus.vms.VmSimple;
+import org.cloudsimplus.power.models.PowerModelHostSimple;
+//import org.cloudsimplus.power.
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,11 +62,17 @@ public class simu_advanced {
     
  // Cost parameters (example values)
     private static final double COST_PER_SEC      = 3.0;   // CPU cost per second
-    private static final double COST_PER_MEM      = 0.05;  // Cost per MB of RAM
+    private static final double COST_PER_MEM      = 0.005;  // Cost per MB of RAM
     private static final double COST_PER_STORAGE  = 0.001; // Cost per MB of storage
     private static final double COST_PER_BW       = 0.001; // Cost per MB of bandwidth
 
+    // Power  parameters (example values)
+    private static final int SCHEDULING_INTERVAL = 10;
+
+    private static final double STATIC_POWER      = 50;   // CPU cost per second
+    private static final double MAX_POWER      = 200;  // Cost per MB of RAM
     
+   
     private final CloudSimPlus simulation;
     private final DatacenterBroker broker;
     private List<Vm> vmList;
@@ -133,22 +143,39 @@ public class simu_advanced {
         for (int i = 0; i < HOSTS_PER_DATACENTER; i++) {
             hostList.add(createHost());
         }
-        return new DatacenterSimple(simulation, hostList);
+        DatacenterSimple dc=new DatacenterSimple(simulation, hostList);
+        dc.setSchedulingInterval(SCHEDULING_INTERVAL);
+        dc.getCharacteristics()
+        .setCostPerSecond(COST_PER_SEC)       // Cost per CPU second
+        .setCostPerMem(COST_PER_MEM)          // Cost per MB of RAM used
+        .setCostPerStorage(COST_PER_STORAGE)  // Cost per MB of storage used
+        .setCostPerBw(COST_PER_BW);           // Cost per MB of Bandwidth used
+        return dc;
     }
+
 
     private Host createHost() {
         List<Pe> peList = new ArrayList<>(PES_PER_HOST);
         for (int i = 0; i < PES_PER_HOST; i++) {
             peList.add(new PeSimple(HOST_MIPS));
         }
-        return new HostSimple(HOST_RAM, HOST_BW, HOST_STORAGE, peList);
+        // Use PowerHost instead of HostSimple
+        
+        HostSimple host = new HostSimple(HOST_RAM, HOST_BW, HOST_STORAGE, peList);
+        host.setPowerModel(new PowerModelHostSimple(MAX_POWER, STATIC_POWER));
+        host.enableUtilizationStats();
+        host.setStartupDelay(0).setShutDownDelay(0); // optional
+        return host;
     }
+
 
     private List<Vm> createVms() {
         List<Vm> list = new ArrayList<>(VMS);
         for (int i = 0; i < VMS; i++) {
             Vm vm = new VmSimple(VM_MIPS, VM_PES);
             vm.setRam(VM_RAM).setBw(VM_BW).setSize(VM_STORAGE);
+            vm.enableUtilizationStats();
+           
             vm.setCloudletScheduler(new CloudletSchedulerSpaceShared());
             list.add(vm);
         }
@@ -158,19 +185,18 @@ public class simu_advanced {
     private List<Cloudlet> createCloudlets() {
         List<Cloudlet> list = new ArrayList<>(CLOUDLETS);
 
-        // CPU: 50% usage
-//        UtilizationModelDynamic cpuModel = new UtilizationModelDynamic(0.5);
-        
-        // RAM/BW: 1% usage (Allows 100 concurrent cloudlets per VM if needed)
-//        UtilizationModelDynamic memoryModel = new UtilizationModelDynamic(0.01);
-//        UtilizationModelDynamic bwModel = new UtilizationModelDynamic(0.01);
+        // CPU:  usage
 
+        UtilizationModelDynamic cpuModel = new UtilizationModelDynamic(0.8); // 80% CPU
+        UtilizationModelDynamic ramModel = new UtilizationModelDynamic(0.5); // 50% RAM
+        UtilizationModelDynamic bwModel = new UtilizationModelDynamic(0.3);  // 30% BW
         for (int i = 0; i < CLOUDLETS; i++) {
-            Cloudlet cloudlet = new CloudletSimple(CLOUDLET_LENGTH, CLOUDLET_PES, new UtilizationModelFull());
+            Cloudlet cloudlet = new CloudletSimple(CLOUDLET_LENGTH, CLOUDLET_PES);
             
             // FIX: Explicitly set low memory/bandwidth consumption
-            cloudlet.setUtilizationModelRam( new UtilizationModelFull());
-            cloudlet.setUtilizationModelBw( new UtilizationModelFull());
+            cloudlet.setUtilizationModelCpu(new UtilizationModelFull());
+            cloudlet.setUtilizationModelRam(new UtilizationModelFull());
+            cloudlet.setUtilizationModelBw(new UtilizationModelFull());
             
             cloudlet.setSizes(CLOUDLET_FILE_SIZE);
             list.add(cloudlet);
@@ -181,133 +207,321 @@ public class simu_advanced {
 
     private void printSummaryStatistics(List<Cloudlet> finishedCloudlets) {
         System.out.println("\n" + "=".repeat(80));
-        System.out.println("SUMMARY STATISTICS");
+        System.out.println("COMPREHENSIVE SIMULATION ANALYSIS");
         System.out.println("=".repeat(80));
 
+        // Section 1: Execution Metrics
+        printExecutionMetrics(finishedCloudlets);
+        
+        // Section 2: Resource Utilization Analysis
+        printResourceUtilizationAnalysis();
+        
+        
+        // Section 3: Performance Metrics
+        printPerformanceMetrics(finishedCloudlets);
+        
+        // Section 4: Power & Energy Analysis
+        printPowerEnergyAnalysis();
+        
+       
+        // Section 5: NATIVE Cost Analysis (Realistic Cloud Pricing)
+        printNativeCostAnalysis(finishedCloudlets);
+        
+        System.out.println("=".repeat(80));
+    }
+  
+    private void printNativeCostAnalysis(List<Cloudlet> finishedCloudlets) {
+        System.out.println("\n## NATIVE CLOUDSIM PLUS COST ANALYSIS");
+        System.out.println("-".repeat(80));
+
+        double totalCpuCost = 0.0;
+        double totalMemCost = 0.0;
+        double totalStorageCost = 0.0;
+        double totalBwCost = 0.0;
+        double totalVmCost = 0.0;
+
+        List<Vm> allVms = broker.getVmCreatedList();
+        
+        // Calculate cost using CloudSim Plus built-in VmCost API
+        System.out.println("\n  VM-BASED COSTS (VmCost API):");
+        System.out.println("  " + "-".repeat(78));
+        System.out.printf("  %-8s %-12s %-12s %-14s %-12s %-12s%n", 
+            "VM ID", "CPU Cost", "Mem Cost", "Storage Cost", "BW Cost", "Total Cost");
+        System.out.println("  " + "-".repeat(78));
+
+        for (Vm vm : allVms) {
+            // CloudSim Plus native cost calculation using VmCost
+            VmCost vmCost = new VmCost(vm);
+            
+            double cpuCost = vmCost.getProcessingCost();
+            double memCost = vmCost.getMemoryCost();
+            double storageCost = vmCost.getStorageCost();
+            double bwCost = vmCost.getBwCost();
+            double totalCost = vmCost.getTotalCost();
+            
+            totalCpuCost += cpuCost;
+            totalMemCost += memCost;
+            totalStorageCost += storageCost;
+            totalBwCost += bwCost;
+            totalVmCost += totalCost;
+            
+            // Print first 5 and last 2 VMs
+            if (vm.getId() < 5 || vm.getId() >= allVms.size() - 2) {
+                System.out.printf("  %-8d $%-11.4f $%-11.4f $%-13.4f $%-11.4f $%-11.4f%n",
+                    vm.getId(), cpuCost, memCost, storageCost, bwCost, totalCost);
+            } else if (vm.getId() == 5) {
+                System.out.println("  ...");
+            }
+        }
+        
+        System.out.println("  " + "-".repeat(78));
+        System.out.printf("  TOTAL:   $%-11.4f $%-11.4f $%-13.4f $%-11.4f $%-11.4f%n",
+            totalCpuCost, totalMemCost, totalStorageCost, totalBwCost, totalVmCost);
+
+        // Cost summary
+        System.out.println("\n  COST SUMMARY:");
+        System.out.println("  " + "-".repeat(78));
+        System.out.printf("    Total Infrastructure Cost:              $%.4f%n", totalVmCost);
+        System.out.printf("      ├─ CPU Processing Cost:               $%.4f (%.1f%%)%n", 
+            totalCpuCost, (totalCpuCost / totalVmCost) * 100);
+        System.out.printf("      ├─ Memory Cost:                       $%.4f (%.1f%%)%n", 
+            totalMemCost, (totalMemCost / totalVmCost) * 100);
+        System.out.printf("      ├─ Storage Cost:                      $%.4f (%.1f%%)%n", 
+            totalStorageCost, (totalStorageCost / totalVmCost) * 100);
+        System.out.printf("      └─ Bandwidth Cost:                    $%.4f (%.1f%%)%n", 
+            totalBwCost, (totalBwCost / totalVmCost) * 100);
+        System.out.println();
+        System.out.printf("    Cost per VM (average):                  $%.4f%n", 
+            totalVmCost / allVms.size());
+        System.out.printf("    Cost per Cloudlet (average):            $%.6f%n", 
+            totalVmCost / finishedCloudlets.size());
+        System.out.printf("    Cost per Second:                        $%.6f%n", 
+            totalVmCost / simulation.clock());
+        
+        // Additional metrics
+        double simTime = simulation.clock();
+        System.out.println("\n  COST EFFICIENCY METRICS:");
+        System.out.println("  " + "-".repeat(78));
+        System.out.printf("    Simulation Duration:                    %.2f seconds%n", simTime);
+        System.out.printf("    Total VMs:                              %d%n", allVms.size());
+        System.out.printf("    Total Cloudlets:                        %d%n", finishedCloudlets.size());
+        System.out.printf("    Cost per VM-Second:                     $%.6f%n", 
+            totalVmCost / (allVms.size() * simTime));
+        System.out.printf("    Revenue per Cloudlet (if charging $1):  %.1f%% margin%n",
+            ((1.0 - (totalVmCost / finishedCloudlets.size())) * 100));
+    }
+
+    // ==================== SECTION 1: Execution Metrics ====================
+    private void printExecutionMetrics(List<Cloudlet> finishedCloudlets) {
+        System.out.println("\n## 1. EXECUTION METRICS");
+        System.out.println("-".repeat(80));
+        
         int totalCloudlets = CLOUDLETS;
         int finishedCount = finishedCloudlets.size();
-        int failedCount = totalCloudlets - finishedCount;
-
-        System.out.println("\nCloudlet Execution:");
-        System.out.println("  Total Cloudlets: " + totalCloudlets);
-        System.out.println("  Successfully Finished: " + finishedCount);
-        System.out.println("  Failed/Incomplete: " + failedCount);
-        System.out.println("  Success Rate: " + 
-            String.format("%.2f%%", (finishedCount * 100.0 / totalCloudlets)));
-
-        if (!finishedCloudlets.isEmpty()) {
-            double totalExecTime = finishedCloudlets.stream()
-                .mapToDouble(c ->(c.getFinishTime() - c.getStartTime()))
-                .sum();
-            double avgExecTime = totalExecTime / finishedCloudlets.size();
-
-            double minExecTime = finishedCloudlets.stream()
-                .mapToDouble(c -> (c.getFinishTime() - c.getStartTime()))
-                .min()
-                .orElse(0);
-
-            double maxExecTime = finishedCloudlets.stream()
-                .mapToDouble(c -> (c.getFinishTime() - c.getStartTime()))
-                .max()
-                .orElse(0);
-
-            System.out.println("\nExecution Time Statistics:");
-            System.out.println("  Average Execution Time: " + 
-                String.format("%.2f seconds", avgExecTime));
-            System.out.println("  Min Execution Time: " + 
-                String.format("%.2f seconds", minExecTime));
-            System.out.println("  Max Execution Time: " + 
-                String.format("%.2f seconds", maxExecTime));
-            System.out.println("  Total Execution Time: " + 
-                String.format("%.2f seconds", totalExecTime));
-        }
-
-        System.out.println("\nVM Statistics:");
-        System.out.println("  Total VMs Requested: " + VMS);
-        System.out.println("  VMs Successfully Created: " + 
-            broker.getVmCreatedList().size());
-        System.out.println("  VMs Failed to Create: " + 
-            (VMS - broker.getVmCreatedList().size()));
-
-        // NEW: VM Statistics per Datacenter
-        System.out.println("\nVMs per Datacenter:");
-        for (int i = 0; i < datacenterList.size(); i++) {
-            Datacenter dc = datacenterList.get(i);
-            int vmCountInDC = 0;
-            
-            // Count VMs in this datacenter
-            for (Vm vm : broker.getVmCreatedList()) {
-                if (vm.getHost().getDatacenter().getId() == dc.getId()) {
-                    vmCountInDC++;
-                }
-            }
-            
-            System.out.println("  Datacenter " + (i + 1) + ": " + vmCountInDC + " VMs");
-            
-            // Print details of each VM in this DC
-            for (Vm vm : broker.getVmCreatedList()) {
-                if (vm.getHost().getDatacenter().getId() == dc.getId()) {
-                    long vmRam = vm.getRam().getCapacity();
-                    long vmBw = vm.getBw().getCapacity();
-                    System.out.println("    - VM " + vm.getId() + ": RAM=" + vmRam + "MB, BW=" + vmBw + "Mbps");
-                }
-            }
-        }
-
-        System.out.println("\nDatacenter Configuration:");
-        System.out.println("  Number of Datacenters: " + DATACENTERS);
-        System.out.println("  Hosts per Datacenter: " + HOSTS_PER_DATACENTER);
-        System.out.println("  PE Cores per Host: " + PES_PER_HOST);
-        System.out.println("  Total PE Cores: " + (DATACENTERS * HOSTS_PER_DATACENTER * PES_PER_HOST));
-        // ================== COST STATISTICS ==================
-        System.out.println("\nCost Statistics:");
-
-        // 1) CPU cost: sum of execution time (sec) * COST_PER_SEC
-        double totalCpuSeconds = finishedCloudlets.stream()
+        double successRate = (finishedCount * 100.0) / totalCloudlets;
+        
+        double totalExecTime = finishedCloudlets.stream()
             .mapToDouble(c -> (c.getFinishTime() - c.getStartTime()))
             .sum();
-        double cpuCost = totalCpuSeconds * COST_PER_SEC;
-
-        // 2) RAM cost: total VM RAM (MB) * COST_PER_MEM
-        long totalVmRamMb = broker.getVmCreatedList().stream()
-            .mapToLong(vm -> vm.getRam().getCapacity())
-            .sum();
-        double ramCost = totalVmRamMb * COST_PER_MEM;
-
-        // 3) Storage cost: total VM storage (MB) * COST_PER_STORAGE
-        long totalVmStorageMb = broker.getVmCreatedList().stream()
-            .mapToLong(vm -> vm.getStorage().getCapacity())
-            .sum();
-        double storageCost = totalVmStorageMb * COST_PER_STORAGE;
-
-        // 4) Bandwidth cost: use cloudlet input + output sizes (MB) * COST_PER_BW
-        long totalCloudletDataMb = finishedCloudlets.stream()
-            .mapToLong(c -> c.getFileSize() + c.getOutputSize())
-            .sum();
-        double bwCost = totalCloudletDataMb * COST_PER_BW;
-
-        double totalCost = cpuCost + ramCost + storageCost + bwCost;
-
-        System.out.println("  Total CPU Time (sec): " + String.format("%.2f", totalCpuSeconds));
-        System.out.println("  CPU Cost: $" + String.format("%.4f", cpuCost));
-
-        System.out.println("  Total VM RAM (MB): " + totalVmRamMb);
-        System.out.println("  RAM Cost: $" + String.format("%.4f", ramCost));
-
-        System.out.println("  Total VM Storage (MB): " + totalVmStorageMb);
-        System.out.println("  Storage Cost: $" + String.format("%.4f", storageCost));
-
-        System.out.println("  Total Cloudlet Data (MB): " + totalCloudletDataMb);
-        System.out.println("  Bandwidth Cost: $" + String.format("%.4f", bwCost));
-
-        System.out.println("  ------------------------------------");
-        System.out.println("  TOTAL COST: $" + String.format("%.4f", totalCost));
-        if (finishedCount > 0) {
-            System.out.println("  Cost per Cloudlet: $" + 
-                String.format("%.6f", totalCost / finishedCount));
-        }
-
-        System.out.println("\n" + "=".repeat(80));
+        double avgExecTime = finishedCount > 0 ? totalExecTime / finishedCount : 0;
+        double minExecTime = finishedCloudlets.stream()
+            .mapToDouble(c -> (c.getFinishTime() - c.getStartTime()))
+            .min().orElse(0);
+        double maxExecTime = finishedCloudlets.stream()
+            .mapToDouble(c -> (c.getFinishTime() - c.getStartTime()))
+            .max().orElse(0);
+        
+        double simDuration = simulation.clock();
+        double throughput = finishedCount / simDuration; // cloudlets/second
+        
+        System.out.printf("  Total Cloudlets: %d | Success: %d | Failed: %d | Success Rate: %.1f%%%n",
+            totalCloudlets, finishedCount, totalCloudlets - finishedCount, successRate);
+        System.out.printf("  Execution Time - Avg: %.3fs | Min: %.3fs | Max: %.3fs%n",
+            avgExecTime, minExecTime, maxExecTime);
+        System.out.printf("  Simulation Duration: %.2f seconds%n", simDuration);
+        System.out.printf("  Throughput: %.2f cloudlets/second%n", throughput);
     }
+
+    // ==================== SECTION 2: Resource Utilization ====================
+    private void printResourceUtilizationAnalysis() {
+        System.out.println("\n## 2. RESOURCE UTILIZATION ANALYSIS");
+        System.out.println("-".repeat(80));
+        
+        List<Vm> allVms = broker.getVmCreatedList();
+        
+        // Host-level analysis
+        System.out.println("\n  A) HOST-LEVEL UTILIZATION:");
+        System.out.println("  " + "-".repeat(78));
+        System.out.println(String.format("  %-12s %-6s %-12s %-12s %-12s %-8s",
+            "Datacenter", "Host", "CPU Util", "VMs", "Cloudlets", "Power"));
+        System.out.println("  " + "-".repeat(78));
+        
+        double totalCpuUtil = 0.0;
+        int totalHosts = 0;
+        int totalVmsCreated = 0;
+        
+        for (Datacenter dc : datacenterList) {
+            for (Host host : dc.getHostList()) {
+                double cpuUtil = host.getCpuUtilizationStats().getMean();
+                
+                // Count VMs on this host
+                long vmsOnHost = allVms.stream()
+                    .filter(vm -> vm.getHost().getId() == host.getId() && 
+                                 vm.getHost().getDatacenter().getId() == dc.getId())
+                    .count();
+                
+                // Count cloudlets executed on this host
+                long cloudletsOnHost = broker.getCloudletFinishedList().stream()
+                    .filter(c -> c.getVm().getHost().getId() == host.getId() &&
+                               c.getVm().getHost().getDatacenter().getId() == dc.getId())
+                    .count();
+                
+                double power = host.getPowerModel().getPower(cpuUtil);
+                
+                System.out.printf("  %-12s %-6d %10.1f%% %12d %12d %8.1f W%n",
+                    "DC-" + dc.getId(), host.getId(), cpuUtil * 100, 
+                    vmsOnHost, cloudletsOnHost, power);
+                
+                totalCpuUtil += cpuUtil;
+                totalHosts++;
+                totalVmsCreated += vmsOnHost;
+            }
+        }
+        
+        System.out.println("  " + "-".repeat(78));
+        System.out.printf("  AVERAGE: %44s %10.1f%%%n", "", (totalCpuUtil / totalHosts) * 100);
+        
+        // VM-level analysis
+        System.out.println("\n  B) VM-LEVEL UTILIZATION:");
+        System.out.println("  " + "-".repeat(78));
+        System.out.println(String.format("  %-8s %-12s %-12s %-12s %-12s",
+            "VM ID", "CPU Util", "RAM Alloc", "BW Alloc", "Cloudlets"));
+        System.out.println("  " + "-".repeat(78));
+        
+        double totalVmCpuUtil = 0.0;
+        long totalRamUsed = 0;
+        long totalBwUsed = 0;
+        
+        for (Vm vm : allVms) {
+            double vmCpuUtil = vm.getCpuUtilizationStats().getMean();
+            
+            // Calculate actual resource usage
+            long ramUsed = (long)(vm.getRam().getCapacity() * 1.0); // 100% allocated
+            long bwUsed = (long)(vm.getBw().getCapacity() * 1.0);   // 100% allocated
+            
+            long cloudletCount = broker.getCloudletFinishedList().stream()
+                .filter(c -> c.getVm().getId() == vm.getId())
+                .count();
+            
+            if (vm.getId() < 5 || vm.getId() >= allVms.size() - 2) { // Show first 5 and last 2
+                System.out.printf("  %-8d %10.1f%% %10d MB %10d Mbps %12d%n",
+                    vm.getId(), vmCpuUtil * 100, ramUsed, bwUsed, cloudletCount);
+            } else if (vm.getId() == 5) {
+                System.out.println("  ...");
+            }
+            
+            totalVmCpuUtil += vmCpuUtil;
+            totalRamUsed += ramUsed;
+            totalBwUsed += bwUsed;
+        }
+        
+        System.out.println("  " + "-".repeat(78));
+        System.out.printf("  AVERAGE: %10.1f%% %10d MB %10d Mbps%n",
+            (totalVmCpuUtil / allVms.size()) * 100,
+            totalRamUsed / allVms.size(),
+            totalBwUsed / allVms.size());
+    }
+
+    // ==================== SECTION 3: Power & Energy ====================
+    private void printPowerEnergyAnalysis() {
+        System.out.println("\n## 3. POWER & ENERGY CONSUMPTION");
+        System.out.println("-".repeat(80));
+        
+        double simTime = simulation.clock();
+        double totalPower = 0.0;
+        
+        System.out.println(String.format("\n  %-15s %-15s %-15s %-15s",
+            "Datacenter", "Avg Power (W)", "Energy (J)", "Energy (kWh)"));
+        System.out.println("  " + "-".repeat(76));
+        
+        for (Datacenter dc : datacenterList) {
+            double dcPower = 0.0;
+            for (Host host : dc.getHostList()) {
+                double cpuUtil = host.getCpuUtilizationStats().getMean();
+                dcPower += host.getPowerModel().getPower(cpuUtil);
+            }
+            
+            double dcEnergy = dcPower * simTime;
+            double dcEnergyKwh = dcEnergy / 3600000.0;
+            
+            System.out.printf("  %-15s %15.1f %15.1f %15.6f%n",
+                "DC-" + dc.getId(), dcPower, dcEnergy, dcEnergyKwh);
+            
+            totalPower += dcPower;
+        }
+        
+        double totalEnergy = totalPower * simTime;
+        double totalEnergyKwh = totalEnergy / 3600000.0;
+        
+        System.out.println("  " + "-".repeat(76));
+        System.out.printf("  %-15s %15.1f %15.1f %15.6f%n",
+            "TOTAL", totalPower, totalEnergy, totalEnergyKwh);
+        
+        // Carbon footprint (assuming 0.5 kg CO2/kWh - typical grid average)
+        double carbonFootprint = totalEnergyKwh * 0.5;
+        System.out.printf("\n  Carbon Footprint: %.6f kg CO2 (grid average: 0.5 kg CO2/kWh)%n", 
+            carbonFootprint);
+        
+        // Energy efficiency
+        int finishedCloudlets = broker.getCloudletFinishedList().size();
+        if (finishedCloudlets > 0) {
+            double energyPerCloudlet = totalEnergy / finishedCloudlets;
+            System.out.printf("  Energy Efficiency: %.2f J/cloudlet%n", energyPerCloudlet);
+        }
+    }
+
+
+    // ==================== SECTION 5: Performance Metrics ====================
+    private void printPerformanceMetrics(List<Cloudlet> finishedCloudlets) {
+        System.out.println("\n## 5. PERFORMANCE METRICS");
+        System.out.println("-".repeat(80));
+        
+        double simTime = simulation.clock();
+        List<Vm> allVms = broker.getVmCreatedList();
+        
+        // Resource efficiency
+        double avgCpuUtil = allVms.stream()
+            .mapToDouble(vm -> vm.getCpuUtilizationStats().getMean())
+            .average().orElse(0.0);
+        
+        // Calculate makespan (time from first cloudlet start to last finish)
+        double firstStart = finishedCloudlets.stream()
+            .mapToDouble(Cloudlet::getStartTime)
+            .min().orElse(0.0);
+        double lastFinish = finishedCloudlets.stream()
+            .mapToDouble(Cloudlet::getFinishTime)
+            .max().orElse(0.0);
+        double makespan = lastFinish - firstStart;
+        
+        // Calculate total MIPS executed
+        long totalMI = finishedCloudlets.stream()
+            .mapToLong(Cloudlet::getLength)
+            .sum();
+        double effectiveMIPS = totalMI / simTime;
+        
+        // Calculate resource wastage
+        int totalPEs = DATACENTERS * HOSTS_PER_DATACENTER * PES_PER_HOST;
+        double theoreticalMaxMIPS = totalPEs * HOST_MIPS;
+        double utilization = effectiveMIPS / theoreticalMaxMIPS;
+        
+        System.out.printf("  Average CPU Utilization: %.1f%%%n", avgCpuUtil * 100);
+        System.out.printf("  Resource Utilization: %.1f%%%n", utilization * 100);
+        System.out.printf("  Makespan: %.2f seconds%n", makespan);
+        System.out.printf("  Effective MIPS: %.0f MIPS%n", effectiveMIPS);
+        System.out.printf("  Total MI Executed: %d MI%n", totalMI);
+        System.out.printf("  VM-to-Host Ratio: %.2f%n", (double) allVms.size() / (DATACENTERS * HOSTS_PER_DATACENTER));
+        System.out.printf("  Cloudlet-to-VM Ratio: %.2f%n", (double) finishedCloudlets.size() / allVms.size());
+    }
+
 
 }
