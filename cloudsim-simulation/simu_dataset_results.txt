@@ -1,0 +1,129 @@
+================================================================================
+                  CLOUDSIM PLUS SIMULATION COMPREHENSIVE REPORT
+================================================================================
+Generated: 2025-12-18 19:36:13
+
+├─ SIMULATION CONFIGURATION
+│
+│  Infrastructure:
+│    Datacenters    : 3
+│    Hosts/DC       : 1
+│    Cores/Host     : 5
+│    Total Cores    : 15
+│
+│  Virtual Machines:
+│    Total VMs      : 15
+│
+│  Workload:
+│    Cloudlets      : 5
+│
+│  Pricing (USD):
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 1. TIMING & QoS ANALYSIS
+│
+│  Cloudlets Processed        : 5 / 5 (100.00%)
+│  Total Simulation Time      : 55.11 seconds
+│
+│  Execution Time (CPU Processing):
+│    Average   : 11.585206 sec
+│    Min       : 7.888889 sec
+│    Max       : 19.890000 sec
+│
+│  Waiting Time (Queue Delay):
+│    Average   : 30.055429 sec
+│    Min       : 25.800000 sec
+│    Max       : 37.767143 sec
+│
+│  Turnaround Time:
+│    Average   : 41.640635 sec
+│
+│  Congestion Ratio (Wait/Exec) : 2.5943
+│  SLA Violations              : 5 (100.00%)
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 2. COST ANALYSIS (USD)
+│
+│  Cost Breakdown:
+│    CPU Cost         : $7.671289 (0.3%)
+│    Memory Cost      : $308.000000 (11.2%)
+│    Storage Cost     : $1568.000000 (56.9%)
+│    Bandwidth Cost   : $61.600000 (2.2%)
+│
+│  Total Costs:
+│    Infrastructure   : $2755.671289
+│    Per VM           : $918.557096
+│    Per Cloudlet     : $551.134258
+│    Per Second       : $50.003108
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 3. POWER & ENERGY ANALYSIS
+│
+│  Power Consumption:
+│    Total Power      : 150.21 W
+│    Static Power     : 150.00 W (99.9%)
+│    Dynamic Power    : 0.21 W (0.1%)
+│    Avg per Host     : 50.07 W
+│
+│  Energy Metrics:
+│    Duration         : 55.11 seconds
+│    Total Energy     : 8278.13 J
+│    Total Energy     : 0.002299 kWh
+│    Per Cloudlet     : 0.000459896 kWh
+│    Avg CPU Util     : 0.05%
+│    Power Efficiency : 0.000153 kWh/core
+│
+│  Carbon Footprint   : 0.0011 kg CO2 (0.5 kg/kWh)
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 4. RESOURCE UTILIZATION
+│
+│  Memory (RAM):
+│    Total Capacity   : 1368 MB
+│    Allocated        : 60 MB
+│    Unused           : 1308 MB
+│    Efficiency       : 4.39%
+│
+│  Bandwidth (BW):
+│    Total Capacity   : 216 Mbps
+│    Allocated        : 192 Mbps
+│    Unused           : 24 Mbps
+│    Efficiency       : 88.89%
+│
+│  Resource Ratios:
+│    VMs per Host     : 5.00
+│    Cloudlets/VM     : 0.33
+│    Cloudlets/Host   : 1.67
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 5. NETWORK DISTRIBUTION & TOPOLOGY
+│
+│  Logical Network Topology:
+│    Broker ID        : 4
+│    Datacenters      : 3
+│    Topology         : Star (Broker → DCs)
+│
+│  VM Distribution:
+│    Datacenter 1: 1 VMs
+│    Datacenter 2: 1 VMs
+│    Datacenter 3: 1 VMs
+│
+│  Cloudlet Distribution:
+│    Datacenter 1: 2 cloudlets (40.0%)
+│    Datacenter 2: 2 cloudlets (40.0%)
+│    Datacenter 3: 1 cloudlets (20.0%)
+│    Vm 1: 2 cloudlets (40.0%)
+│    Vm 2: 2 cloudlets (40.0%)
+│    Vm 3: 1 cloudlets (20.0%)
+│
+│  Data Flow:
+│    Input Data       : 96.00000000 MB
+│    Output Data      : 82.00000000 MB
+│    Total Transfers  : 178.00000000 MB
+│
+└─────────────────────────────────────────────────────────────────────

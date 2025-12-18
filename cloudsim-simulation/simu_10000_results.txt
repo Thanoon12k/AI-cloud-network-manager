@@ -1,0 +1,149 @@
+================================================================================
+                  CLOUDSIM PLUS SIMULATION COMPREHENSIVE REPORT
+================================================================================
+Generated: 2025-12-18 17:09:23
+
+├─ SIMULATION CONFIGURATION
+│
+│  Infrastructure:
+│    Datacenters    : 3
+│    Hosts/DC       : 1
+│    Cores/Host     : 5
+│    Total Cores    : 15
+│
+│  Virtual Machines:
+│    Total VMs      : 15
+│    MIPS/VM        : 1000
+│    RAM/VM         : 2048 MB
+│    BW/VM          : 10000 Mbps
+│
+│  Workload:
+│    Cloudlets      : 10000
+│    Length         : 1200 MI
+│
+│  Pricing (USD):
+│    CPU/sec        : $0.0100
+│    RAM/MB         : $0.0020
+│    Storage/MB     : $0.0005
+│    BW/Mbps        : $0.0000
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 1. TIMING & QoS ANALYSIS
+│
+│  Cloudlets Processed        : 10000 / 10000 (100.00%)
+│  Total Simulation Time      : 1009.60 seconds
+│
+│  Execution Time (CPU Processing):
+│    Average   : 1.251393 sec
+│    Min       : 1.200000 sec
+│    Max       : 1.320000 sec
+│
+│  Waiting Time (Queue Delay):
+│    Average   : 5.375641 sec
+│    Min       : 0.300000 sec
+│    Max       : 28.654855 sec
+│
+│  Turnaround Time:
+│    Average   : 6.627034 sec
+│
+│  Congestion Ratio (Wait/Exec) : 4.2957
+│  SLA Violations              : 7638 (76.38%)
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 2. COST ANALYSIS (USD)
+│
+│  Cost Breakdown:
+│    CPU Cost         : $75.712575 (35.6%)
+│    Memory Cost      : $61.440000 (28.9%)
+│    Storage Cost     : $75.000000 (35.3%)
+│    Bandwidth Cost   : $18.000000 (8.5%)
+│
+│  Total Costs:
+│    Infrastructure   : $212.602575
+│    Per VM           : $14.173505
+│    Per Cloudlet     : $0.021260
+│    Per Second       : $0.210581
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 3. POWER & ENERGY ANALYSIS
+│
+│  Power Consumption:
+│    Total Power      : 204.75 W
+│    Static Power     : 150.00 W (73.3%)
+│    Dynamic Power    : 54.75 W (26.7%)
+│    Avg per Host     : 68.25 W
+│
+│  Energy Metrics:
+│    Duration         : 1009.60 seconds
+│    Total Energy     : 206715.80 J
+│    Total Energy     : 0.057421 kWh
+│    Per Cloudlet     : 0.000005742 kWh
+│    Avg CPU Util     : 12.17%
+│    Power Efficiency : 0.003828 kWh/core
+│
+│  Carbon Footprint   : 0.0287 kg CO2 (0.5 kg/kWh)
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 4. RESOURCE UTILIZATION
+│
+│  Memory (RAM):
+│    Total Capacity   : 48000 MB
+│    Allocated        : 30720 MB
+│    Unused           : 17280 MB
+│    Efficiency       : 64.00%
+│
+│  Bandwidth (BW):
+│    Total Capacity   : 300000 Mbps
+│    Allocated        : 150000 Mbps
+│    Unused           : 150000 Mbps
+│    Efficiency       : 50.00%
+│
+│  Resource Ratios:
+│    VMs per Host     : 5.00
+│    Cloudlets/VM     : 666.67
+│    Cloudlets/Host   : 3333.33
+│
+└─────────────────────────────────────────────────────────────────────
+
+├─ 5. NETWORK DISTRIBUTION & TOPOLOGY
+│
+│  Logical Network Topology:
+│    Broker ID        : 4
+│    Datacenters      : 3
+│    Topology         : Star (Broker → DCs)
+│
+│  VM Distribution:
+│    Datacenter 1: 5 VMs
+│    Datacenter 2: 5 VMs
+│    Datacenter 3: 5 VMs
+│
+│  Cloudlet Distribution:
+│    Datacenter 1: 3335 cloudlets (33.4%)
+│    Datacenter 2: 3335 cloudlets (33.4%)
+│    Datacenter 3: 3330 cloudlets (33.3%)
+│    Vm 0: 667 cloudlets (6.7%)
+│    Vm 1: 667 cloudlets (6.7%)
+│    Vm 2: 667 cloudlets (6.7%)
+│    Vm 3: 667 cloudlets (6.7%)
+│    Vm 4: 667 cloudlets (6.7%)
+│    Vm 5: 667 cloudlets (6.7%)
+│    Vm 6: 667 cloudlets (6.7%)
+│    Vm 7: 667 cloudlets (6.7%)
+│    Vm 8: 667 cloudlets (6.7%)
+│    Vm 9: 667 cloudlets (6.7%)
+│    Vm 10: 666 cloudlets (6.7%)
+│    Vm 11: 666 cloudlets (6.7%)
+│    Vm 12: 666 cloudlets (6.7%)
+│    Vm 13: 666 cloudlets (6.7%)
+│    Vm 14: 666 cloudlets (6.7%)
+│
+│  Data Flow:
+│    Input Data       : 3000000.00000000 MB
+│    Output Data      : 3000000.00000000 MB
+│    Total Transfers  : 6000000.00000000 MB
+│
+└─────────────────────────────────────────────────────────────────────
