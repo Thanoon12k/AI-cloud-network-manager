@@ -69,7 +69,7 @@ public class simulator {
         displayManager.printFinalReport(simulation, broker, datacenterList, finished);
 
         String filename = "simu_"+NUM_CLOUDLETS+"_results.txt";
-        filesManager.writeCompleteReportToFile(filename, simulation, broker, datacenterList, finished);
+        filesManager.writeCompleteReportToFile(filename, simulation, broker, datacenterList, vmList, finished);
     }
 
     // ================= CSV DRIVEN FACTORY METHOD =================
@@ -77,10 +77,10 @@ public class simulator {
     private List<Cloudlet> createCloudlets(boolean use_fixed_values) {
         List<Cloudlet> list = new ArrayList<>();
         UtilizationModelFull fullUtil = new UtilizationModelFull();
+        ContinuousDistribution arrivalDist = new UniformDistr(0, 100);
 
         if (use_fixed_values) {
             // Original logic for fixed values
-            ContinuousDistribution arrivalDist = new UniformDistr(0, 1000);
             for (int i = 0; i < NUM_CLOUDLETS; i++) {
                 Cloudlet cloudlet = new CloudletSimple(CLOUDLET_LENGTH, CLOUDLET_PES);
                 cloudlet.setFileSize(CLOUDLET_FILE_SIZE).setOutputSize(CLOUDLET_OUTPUT_SIZE);
@@ -114,7 +114,7 @@ public class simulator {
                         // Set standard utilization models
                         cloudlet.setUtilizationModelCpu(fullUtil);
                         cloudlet.setUtilizationModelRam(fullUtil);
-                        cloudlet.setUtilizationModelBw(fullUtil);
+                        cloudlet.setUtilizationModelBw(fullUtil).setSubmissionDelay(arrivalDist.sample());
 
                         list.add(cloudlet);
                     } catch (Exception e) {
@@ -132,48 +132,93 @@ public class simulator {
 
  // ================= INFRASTRUCTURE METHODS =================
 
+ // ================= INFRASTRUCTURE METHODS =================
+
+    /**
+     * Creates Datacenters with tiered Host specifications.
+     * Each host is scaled to 500MB RAM to ensure 5 tiered VMs (up to 350MB total) 
+     * fit while keeping ~30% buffer.
+     */
     private List<Datacenter> createDatacenters(int dcs_count) {
         for (int i = 1; i <= dcs_count; i++) {
             List<Host> hostList = new ArrayList<>();
             for (int j = 0; j < HOSTS_PER_DATACENTER; j++) {
                 List<Pe> peList = new ArrayList<>();
-                // Increase MIPS to handle the cumulative MIPS of 5 VMs
+                
+                // MIPS Tiering: Different DCs have different CPU speeds
+                // DC 1: 3000 MIPS | DC 2: 3500 MIPS | DC 3: 4000 MIPS
+                long hostMips = 2500 + (i * 500); 
                 for (int p = 0; p < PES_PER_HOST; p++) {
-                    peList.add(new PeSimple(5000)); 
+                    peList.add(new PeSimple(hostMips)); 
                 }
 
-                // RAM: (avg 32MB * 5 VMs) / 0.8 = 200MB
-                // BW:  (avg 24Mbps * 5 VMs) / 0.8 = 150Mbps
-                // Storage: (avg 116GB * 5 VMs) / 0.8 = 725GB
-                long hostRam = 250; 
-                long hostBw = 200;
-                long hostStorage = 1000;
+                // RESOURCE SCALING: 
+                // To fit 5 VMs where some are "Large" (128MB), we need 400-500MB
+                long hostRam = 500;     // 500 MB
+                long hostBw = 1000;     // 1000 Mbps
+                long hostStorage = 5000; // 5000 GB
 
                 HostSimple host = new HostSimple(hostRam, hostBw, hostStorage, peList);
-                host.setPowerModel(new PowerModelHostSimple(MAX_POWER, STATIC_POWER));
+                
+                // Power usage scales with the DC index (simulating newer/older hardware)
+                double maxPower = 200 + (i * 20);
+                double staticPower = 50 + (i * 10);
+                host.setPowerModel(new PowerModelHostSimple(maxPower, staticPower));
+                
                 host.enableUtilizationStats();
                 hostList.add(host);
             }
+            
             DatacenterSimple dc = new DatacenterSimple(simulation, hostList);
+            
+            // Tiered Pricing: DC 3 is significantly more expensive than DC 1
             dc.getCharacteristics()
-              .setCostPerSecond( 1 + (i * 2)).setCostPerMem( 1 + (i * 2))
-              .setCostPerStorage( 1 + (i * 2)).setCostPerBw( 0.5 + (i * 2));
+              .setCostPerSecond(1.0 + (i * 1.5)/50)
+              .setCostPerMem(0.5 + (i * 0.5)/50)
+              .setCostPerStorage(0.1 + (i * 0.2)/50)
+              .setCostPerBw(0.05 + (i * 0.1)/50);
+            
             datacenterList.add(dc);
         }
         return datacenterList;
     }
 
+    /**
+     * Creates 15 VMs using a T-Shirt Size (S, M, L) Tiering System.
+     */
     private List<Vm> createVms() {
         List<Vm> list = new ArrayList<>();
-        // Note: Using VM_PES from config to ensure consistency
         for (int i = 1; i <= NUM_VMS; i++) {
-            Vm vm = new VmSimple(i, 3 + (i * 2), VM_PES);
-            vm.setRam(16 + (i * 2))
-              .setBw(8 + (i * 2))
-              .setSize(100 + (i * 2));
+            long mipsTier;
+            int ramTier;
+            String tierName;
+
+            // Tiering Logic: 1=Small, 2=Medium, 3=Large, 4=Small...
+            if (i % 3 == 0) {
+                tierName = "LARGE";
+                mipsTier = 1500;
+                ramTier = 128;
+            } else if (i % 2 == 0) {
+                tierName = "MEDIUM";
+                mipsTier = 800;
+                ramTier = 64;
+            } else {
+                tierName = "SMALL";
+                mipsTier = 400;
+                ramTier = 32;
+            }
+
+            Vm vm = new VmSimple(i, mipsTier, VM_PES);
+            vm.setRam(ramTier)
+              .setBw(20 + (i * 5))  // Tiered Bandwidth
+              .setSize(200 + (i * 10)); // Tiered Storage
             
             vm.setCloudletScheduler(new CloudletSchedulerSpaceShared());
             vm.enableUtilizationStats();
+            
+            // Note: CloudSim Plus provides Description, good for tracking tiers in logs
+            vm.setDescription(tierName); 
+            
             list.add(vm);
         }
         return list;
